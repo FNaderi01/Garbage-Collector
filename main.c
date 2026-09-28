@@ -1,3 +1,5 @@
+#define STACK_MAX 256
+
 typedef enum {
     OBJ_INT,
     OBJ_PAIR
@@ -17,3 +19,8 @@ typedef struct sObject {
         };
     };
 } Object;
+
+typedef struct {
+  Object* stack[STACK_MAX];
+  int stackSize;
+} VM;
