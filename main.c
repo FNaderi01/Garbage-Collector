@@ -40,3 +40,24 @@ Object* pop(VM* vm) {
     assert(vm->stackSize > 0, "Stack underflow!");
     return vm->stack[--vm->stackSize];
 }
+
+Object* newObject(VM* vm, ObjectType type) {
+    Object* object = malloc(sizeof(Object));
+    object->type = type;
+    return object;
+}
+
+void pushInt(VM* vm, int intValue) {
+    Object* object = newObject(vm, OBJ_INT);
+    object->value = intValue;
+    push(vm, object);
+}
+
+Object* pushPair(VM* vm) {
+    Object* object = newObject(vm, OBJ_PAIR);
+    object->first = pop(vm);
+    object->second = pop(vm);
+
+    push(vm, object);
+    return object;
+}
