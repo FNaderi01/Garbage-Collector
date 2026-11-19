@@ -35,7 +35,7 @@ Object* pop(VM* vm) {
 }
 
 void mark(Object* obj) {
-    if(obj->marked) {
+    if(obj == NULL || obj->marked) {
         return;
     }
 
