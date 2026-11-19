@@ -1,5 +1,5 @@
 #define STACK_MAX 256
-
+#define INITIAL_GC_THRESHOLD 100
 typedef enum {
     OBJ_INT,
     OBJ_PAIR
@@ -24,14 +24,20 @@ typedef struct sObject {
 
 typedef struct {
   Object* stack[STACK_MAX];
-  int stackSize;
   Object* firstObject;
+
+  int stackSize;
+  int numObjects;
+  int maxObjects;
 } VM;
 
 VM* newVM() {
     VM* vm = malloc(sizeof(VM));
-    vm->stackSize = 0;
     vm->firstObject = nullptr;
+
+    vm->stackSize = 0;
+    vm->numObjects = 0;
+    vm->maxObjects = INITIAL_GC_THRESHOLD;
     return vm;
 }
 
@@ -46,12 +52,17 @@ Object* pop(VM* vm) {
 }
 
 Object* newObject(VM* vm, ObjectType type) {
+    if(vm->numObjects >= vm->maxObjects) {
+        gc(vm);
+    }
+
     Object* object = malloc(sizeof(Object));
     object->type = type;
     object->marked = false;
 
     object->next = vm->firstObject;
     vm->firstObject = object;
+    vm->numObjects++;
 
     return object;
 }
@@ -98,9 +109,17 @@ void sweep(VM* vm) {
 
             *obj = unreached->next;
             free(unreached);
+            vm->numObjects--;
         } else {
             (*obj)->marked = false;
             obj = &(*obj)->next;
         }
     }
+}
+
+void gc(VM* vm) {
+    markAll(vm);
+    sweep(vm);
+
+    vm->maxObjects = (vm->numObjects > 0 ? vm->numObjects * 2 : INITIAL_GC_THRESHOLD);
 }
