@@ -7,6 +7,7 @@ typedef enum {
 
 typedef struct sObject {
     ObjectType type;
+    unsigned char marked;
 
     union {
         /* OBJ_INT */
@@ -15,7 +16,7 @@ typedef struct sObject {
         /* OBJ_PAIR */
         struct {
             struct sObject* first;
-            struct sObject* second  ;
+            struct sObject* second;
         };
     };
 } Object;
@@ -44,6 +45,7 @@ Object* pop(VM* vm) {
 Object* newObject(VM* vm, ObjectType type) {
     Object* object = malloc(sizeof(Object));
     object->type = type;
+    object->marked = false;
     return object;
 }
 
@@ -60,4 +62,22 @@ Object* pushPair(VM* vm) {
 
     push(vm, object);
     return object;
+}
+
+void markAll(VM* vm) {
+    for(int i = 0; i < vm->stackSize; i++) {
+        mark(vm->stack[i]);
+    }
+}
+
+void mark(Object* obj) {
+    if(obj->marked) {
+        return;
+    }
+
+    obj->marked = true;
+    if(obj->type == OBJ_PAIR) {
+        mark(obj->first);
+        mark(obj->second);
+    }
 }
