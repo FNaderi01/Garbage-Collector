@@ -35,7 +35,7 @@ typedef struct {
   int maxObjects;
 } VM;
 
-VM* newVM();
+VM* newVM(void);
 void freeVM(VM* vm);
 
 void push(VM* vm, Object* value);
