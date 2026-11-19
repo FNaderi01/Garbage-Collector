@@ -38,7 +38,7 @@ typedef struct {
 VM* newVM();
 void freeVM(VM* vm);
 
-void push(VM* vm, Object* obj);
+void push(VM* vm, Object* value);
 Object* pop(VM* vm);
 
 Object* newObject(VM* vm, ObjectType type);

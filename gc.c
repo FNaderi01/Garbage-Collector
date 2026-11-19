@@ -1,40 +1,6 @@
+#include<gc.h>
 #include<stdlib.h>
-#include<stdio.h>
-#include<stdbool.h>
 #include<assert.h>
-
-#define STACK_MAX 256
-#define INITIAL_GC_THRESHOLD 100
-typedef enum {
-    OBJ_INT,
-    OBJ_PAIR
-} ObjectType;
-
-typedef struct sObject {
-    ObjectType type;
-    unsigned char marked;
-    struct sObject* next;
-
-    union {
-        /* OBJ_INT */
-        int value;
-
-        /* OBJ_PAIR */
-        struct {
-            struct sObject* first;
-            struct sObject* second;
-        };
-    };
-} Object;
-
-typedef struct {
-  Object* stack[STACK_MAX];
-  Object* firstObject;
-
-  int stackSize;
-  int numObjects;
-  int maxObjects;
-} VM;
 
 VM* newVM() {
     VM* vm = malloc(sizeof(VM));
@@ -44,6 +10,18 @@ VM* newVM() {
     vm->numObjects = 0;
     vm->maxObjects = INITIAL_GC_THRESHOLD;
     return vm;
+}
+
+void freeVM(VM* vm) {
+    if (vm == NULL) return;
+
+    Object* obj = vm->firstObject;
+    while (obj != NULL) {
+        Object* next = obj->next;
+        free(obj);
+        obj = next;
+    }
+    free(vm);
 }
 
 void push(VM* vm, Object* value) {
@@ -121,15 +99,12 @@ void pushInt(VM* vm, int intValue) {
 }
 
 Object* pushPair(VM* vm) {
+    assert(vm->stackSize >= 2 && "Pair requires two stack values!");
+
     Object* object = newObject(vm, OBJ_PAIR);
     object->first = pop(vm);
     object->second = pop(vm);
 
     push(vm, object);
     return object;
-}
-
-
-int main() {
-    
 }
