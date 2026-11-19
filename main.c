@@ -8,6 +8,7 @@ typedef enum {
 typedef struct sObject {
     ObjectType type;
     unsigned char marked;
+    struct sObject* next;
 
     union {
         /* OBJ_INT */
@@ -24,11 +25,13 @@ typedef struct sObject {
 typedef struct {
   Object* stack[STACK_MAX];
   int stackSize;
+  Object* firstObject;
 } VM;
 
 VM* newVM() {
     VM* vm = malloc(sizeof(VM));
     vm->stackSize = 0;
+    vm->firstObject = nullptr;
     return vm;
 }
 
@@ -46,6 +49,10 @@ Object* newObject(VM* vm, ObjectType type) {
     Object* object = malloc(sizeof(Object));
     object->type = type;
     object->marked = false;
+
+    object->next = vm->firstObject;
+    vm->firstObject = object;
+
     return object;
 }
 
@@ -79,5 +86,21 @@ void mark(Object* obj) {
     if(obj->type == OBJ_PAIR) {
         mark(obj->first);
         mark(obj->second);
+    }
+}
+
+void sweep(VM* vm) {
+    Object** obj = &vm->firstObject;
+
+    while(*obj) {
+        if(!(*obj)->marked) {
+            Object* unreached = *obj;
+
+            *obj = unreached->next;
+            free(unreached);
+        } else {
+            (*obj)->marked = false;
+            obj = &(*obj)->next;
+        }
     }
 }
