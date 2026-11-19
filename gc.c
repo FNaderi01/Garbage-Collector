@@ -1,6 +1,7 @@
 #include "gc.h"
 #include<stdlib.h>
 #include<assert.h>
+#include<stdbool.h>
 
 VM* newVM() {
     VM* vm = malloc(sizeof(VM));
