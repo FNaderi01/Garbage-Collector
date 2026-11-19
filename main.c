@@ -1,3 +1,8 @@
+#include<stdlib.h>
+#include<stdio.h>
+#include<stdbool.h>
+#include<assert.h>
+
 #define STACK_MAX 256
 #define INITIAL_GC_THRESHOLD 100
 typedef enum {
@@ -33,7 +38,7 @@ typedef struct {
 
 VM* newVM() {
     VM* vm = malloc(sizeof(VM));
-    vm->firstObject = nullptr;
+    vm->firstObject = NULL;
 
     vm->stackSize = 0;
     vm->numObjects = 0;
@@ -42,13 +47,55 @@ VM* newVM() {
 }
 
 void push(VM* vm, Object* value) {
-    assert(vm->stackSize < STACK_MAX, "Stack overflow!");
+    assert(vm->stackSize < STACK_MAX && "Stack overflow!");
     vm->stack[vm->stackSize++] = value;
 }
 
 Object* pop(VM* vm) {
-    assert(vm->stackSize > 0, "Stack underflow!");
+    assert(vm->stackSize > 0 && "Stack underflow!");
     return vm->stack[--vm->stackSize];
+}
+
+void mark(Object* obj) {
+    if(obj->marked) {
+        return;
+    }
+
+    obj->marked = true;
+    if(obj->type == OBJ_PAIR) {
+        mark(obj->first);
+        mark(obj->second);
+    }
+}
+
+void markAll(VM* vm) {
+    for(int i = 0; i < vm->stackSize; i++) {
+        mark(vm->stack[i]);
+    }
+}
+
+void sweep(VM* vm) {
+    Object** obj = &vm->firstObject;
+
+    while(*obj) {
+        if(!(*obj)->marked) {
+            Object* unreached = *obj;
+
+            *obj = unreached->next;
+            free(unreached);
+            vm->numObjects--;
+        } else {
+            (*obj)->marked = false;
+            obj = &(*obj)->next;
+        }
+    }
+}
+
+void gc(VM* vm) {
+    markAll(vm);
+    sweep(vm);
+
+    vm->maxObjects = (vm->numObjects > 0 ? vm->numObjects * 2 : INITIAL_GC_THRESHOLD);
 }
 
 Object* newObject(VM* vm, ObjectType type) {
@@ -82,44 +129,7 @@ Object* pushPair(VM* vm) {
     return object;
 }
 
-void markAll(VM* vm) {
-    for(int i = 0; i < vm->stackSize; i++) {
-        mark(vm->stack[i]);
-    }
-}
 
-void mark(Object* obj) {
-    if(obj->marked) {
-        return;
-    }
-
-    obj->marked = true;
-    if(obj->type == OBJ_PAIR) {
-        mark(obj->first);
-        mark(obj->second);
-    }
-}
-
-void sweep(VM* vm) {
-    Object** obj = &vm->firstObject;
-
-    while(*obj) {
-        if(!(*obj)->marked) {
-            Object* unreached = *obj;
-
-            *obj = unreached->next;
-            free(unreached);
-            vm->numObjects--;
-        } else {
-            (*obj)->marked = false;
-            obj = &(*obj)->next;
-        }
-    }
-}
-
-void gc(VM* vm) {
-    markAll(vm);
-    sweep(vm);
-
-    vm->maxObjects = (vm->numObjects > 0 ? vm->numObjects * 2 : INITIAL_GC_THRESHOLD);
+int main() {
+    
 }
