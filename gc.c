@@ -1,4 +1,4 @@
-#include<gc.h>
+#include "gc.h"
 #include<stdlib.h>
 #include<assert.h>
 
@@ -34,7 +34,7 @@ Object* pop(VM* vm) {
     return vm->stack[--vm->stackSize];
 }
 
-void mark(Object* obj) {
+static void mark(Object* obj) {
     if(obj == NULL || obj->marked) {
         return;
     }
@@ -46,13 +46,13 @@ void mark(Object* obj) {
     }
 }
 
-void markAll(VM* vm) {
+static void markAll(VM* vm) {
     for(int i = 0; i < vm->stackSize; i++) {
         mark(vm->stack[i]);
     }
 }
 
-void sweep(VM* vm) {
+static void sweep(VM* vm) {
     Object** obj = &vm->firstObject;
 
     while(*obj) {
