@@ -77,7 +77,6 @@ static void testPushPair(void) {
     freeVM(vm);
 }
 
-
 static void testUnreachableObjects(void) {
     VM* vm = newVM();
 
@@ -99,7 +98,7 @@ static void testUnreachableObjects(void) {
     freeVM(vm);
 }
 
-void testNestedPairs(void) {
+static void testNestedPairs(void) {
     VM* vm = newVM();
 
     pushInt(vm, 1);
