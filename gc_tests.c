@@ -184,15 +184,64 @@ static void testCycle(void) {
     freeVM(vm);
 }
 
+static void testNullChildren(void) {
+    VM* vm = newVM();
+    Object* pair = newObject(vm, OBJ_PAIR);
+    pair->first = NULL;
+    pair->second = NULL;
+    push(vm, pair);
+    gc(vm);
+    assert(vm->numObjects == 1);
+    freeVM(vm);
+}
+
+static void testAutomaticGC(void) {
+    VM* vm = newVM();
+    vm->maxObjects = 2;
+    pushInt(vm, 1);
+    pushInt(vm, 2);
+    pop(vm);
+    pop(vm);
+
+    pushInt(vm, 3); /* newObject triggers GC before allocation */
+    assert(vm->numObjects == 1);
+    assert(vm->firstObject == vm->stack[0]);
+    assert(vm->stack[0]->value == 3);
+    assert(vm->maxObjects == INITIAL_GC_THRESHOLD);
+    freeVM(vm);
+}
+
+static void testThresholdGrowth(void) {
+    VM* vm = newVM();
+    vm->maxObjects = 2;
+    pushInt(vm, 10);
+    pushInt(vm, 20);
+    pushInt(vm, 30); /* 2 survivors -> threshold grows to 4 */
+
+    assert(vm->numObjects == 3);
+    assert(vm->maxObjects == 4);
+    assert(vm->stackSize == 3);
+    freeVM(vm);
+}
+
+#define RUN_TEST(fn) do { fn(); puts("PASS: " #fn); } while (0)
+
+
 int main() {
-    testEmptyGC();
-    testPushIntObject();
-    testPushPairObject();
-    testPushInt();
-    testPushPair();
-    testUnreachableObjects();
-    testNestedPairs();
-    testSweepHeadMiddleTail();
-    testSharedReferences();
-    testCycle();
+    RUN_TEST(testEmptyGC);
+    RUN_TEST(testPushIntObject);
+    RUN_TEST(testPushPairObject);
+    RUN_TEST(testPushInt);
+    RUN_TEST(testPushPair);
+    RUN_TEST(testUnreachableObjects);
+    RUN_TEST(testNestedPairs);
+    RUN_TEST(testSweepHeadMiddleTail);
+    RUN_TEST(testSharedReferences);
+    RUN_TEST(testCycle);
+    RUN_TEST(testNullChildren);
+    RUN_TEST(testAutomaticGC);
+    RUN_TEST(testThresholdGrowth);
+   
+    puts("All 13 tests passed!");
+    return 0;
 }
