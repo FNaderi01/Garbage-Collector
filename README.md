@@ -1,4 +1,3 @@
-# Garbage-Collector
 # Mark-and-Sweep Garbage Collector
 
 A simple mark-and-sweep garbage collector implemented in C to explore automatic memory management, object reachability, and pointer manipulation.
